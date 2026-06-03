@@ -1,6 +1,8 @@
-import React from "react";
+import React, { Suspense } from "react";
 import { motion } from "framer-motion";
-import moi from "../../assets/hero/moi.jpg";
+import { Canvas } from "@react-three/fiber";
+import { OrbitControls, useGLTF, Environment, Float } from "@react-three/drei";
+import popModel from "../../assets/hero/pop.glb?url";
 import { useLanguage } from "../../context/LanguageContext";
 import { content } from "../../data/content";
 
@@ -17,6 +19,23 @@ const stagger = {
   hidden: {},
   visible: { transition: { staggerChildren: 0.08 } },
 };
+
+function PopFigure() {
+  const { scene } = useGLTF(popModel);
+
+  return (
+    <Float speed={1.2} rotationIntensity={0.25} floatIntensity={0.35}>
+      <primitive
+        object={scene}
+        scale={0.3}
+        position={[0, -1.35, 0]}
+        rotation={[0.05, -1.8, 0]}
+      />
+    </Float>
+  );
+}
+
+useGLTF.preload(popModel);
 
 function HeroSection() {
   const { language } = useLanguage();
@@ -50,11 +69,15 @@ function HeroSection() {
             {t.subtitleLine1}
           </motion.p>
 
-          <motion.div variants={fadeUp} className="mt-8 flex flex-col gap-3 sm:flex-row">
+          <motion.div
+            variants={fadeUp}
+            className="mt-8 flex flex-col gap-3 sm:flex-row"
+          >
             <a href="#projects" className="btn-primary">
               {t.primaryButton}
               <span className="ml-2">→</span>
             </a>
+
             <a href="#about" className="btn-secondary">
               {t.secondaryButton}
             </a>
@@ -78,16 +101,33 @@ function HeroSection() {
           className="relative mx-auto w-full max-w-[430px] lg:ml-auto lg:mr-0"
         >
           <div className="absolute -inset-6 rounded-[2rem] bg-primary-soft/70 blur-2xl" />
+
           <div className="relative overflow-hidden rounded-[2rem] border border-border bg-surface p-3 shadow-[var(--shadow-card)]">
-            <img
-              src={moi}
-              alt={t.portraitAlt}
-              className="aspect-[4/5] w-full rounded-[1.35rem] object-cover"
-            />
+            <div className="aspect-[4/5] w-full rounded-[1.35rem] bg-gradient-to-br from-primary-soft via-white to-surface-muted">
+              <Canvas camera={{ position: [0, 0.6, 5], fov: 35 }}>
+                <ambientLight intensity={1.6} />
+                <directionalLight position={[3, 4, 5]} intensity={2.2} />
+                <directionalLight position={[-3, 2, -2]} intensity={0.7} />
+
+                <Suspense fallback={null}>
+                  <PopFigure />
+                  <Environment preset="city" />
+                </Suspense>
+
+                <OrbitControls
+                  enableZoom={false}
+                  enablePan={false}
+                  minPolarAngle={Math.PI / 2.4}
+                  maxPolarAngle={Math.PI / 1.8}
+                />
+              </Canvas>
+            </div>
+
             <div className="absolute bottom-6 left-6 right-6 rounded-2xl border border-white/40 bg-white/85 p-4 shadow-sm backdrop-blur-md">
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
                 {t.coverLabel}
               </p>
+
               <p className="mt-1 text-lg font-bold text-text">
                 {t.coverTitleLine1} · {t.coverTitleLine2}
               </p>
